@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1e3a2a">
+  <meta name="description" content="Rebuild a 2006–2010 MLB team's most-used starting lineup in three tries.">
+  <title>Lineup Nine</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231e3a2a'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='38' font-weight='700' text-anchor='middle' fill='%23f3ead3'%3E9%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;700;800&family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand">
+        <h1>Lineup <span>Nine</span></h1>
+        <p class="tagline">Official scorecard · 2006–2010</p>
+      </div>
+      <nav class="top-actions">
+        <button type="button" class="btn-ghost" id="btn-help">How to play</button>
+        <button type="button" class="btn-ghost" id="btn-stats" aria-label="Statistics">Stats</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="modes" role="tablist" aria-label="Game mode">
+      <button type="button" role="tab" id="tab-daily" aria-selected="true">Daily</button>
+      <button type="button" role="tab" id="tab-practice" aria-selected="false">Practice</button>
+    </div>
+
+    <section class="puzzle-head" aria-live="polite">
+      <div class="practice-picker" id="practice-picker" hidden>
+        <label class="sr-only" for="pick-team">Team</label>
+        <select id="pick-team"></select>
+        <label class="sr-only" for="pick-year">Season</label>
+        <select id="pick-year"></select>
+        <button type="button" class="btn-small" id="btn-random" title="Random team-season">Random</button>
+      </div>
+      <div class="team-line">
+        <span class="year" id="p-year">—</span>
+        <span class="team" id="p-team">Loading…</span>
+        <span class="league" id="p-league"></span>
+      </div>
+      <div class="meta-line">
+        <span id="p-label"></span>
+        <span class="attempts" id="p-attempts" aria-label="Attempts"></span>
+      </div>
+    </section>
+
+    <p class="intro" id="p-intro">Name the nine who started together most often, in batting order. Three tries.</p>
+    <section class="card" aria-label="Lineup card">
+      <div class="card-head" aria-hidden="true">
+        <span>#</span><span>Player</span><span>Pos</span><span></span>
+      </div>
+      <ol class="board" id="board"></ol>
+      <ul class="suggest" id="suggest" role="listbox" hidden></ul>
+      <p class="hint" id="swap-hint" hidden></p>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+      <div class="actions" id="actions">
+        <button type="button" class="btn-secondary" id="btn-paste">Paste lineup</button>
+        <button type="button" class="btn-secondary" id="btn-clear">Clear</button>
+        <button type="button" class="btn-primary" id="btn-submit">Submit lineup</button>
+      </div>
+      <p class="legend" aria-label="Legend">
+        <span><span class="chip fb-green">✓</span>right</span>
+        <span><span class="chip fb-yellow">↑↓</span>bats elsewhere</span>
+        <span><span class="chip fb-yellow">½ ≈</span>partial</span>
+        <span><span class="chip fb-blue">±3</span>nearby year</span>
+        <span><span class="chip fb-orange">R</span>roster</span>
+        <span><span class="chip fb-gray">✗</span>no</span>
+      </p>
+    </section>
+
+    <section class="result" id="result" hidden></section>
+    <section class="history" id="history" aria-label="Your attempts"></section>
+  </main>
+
+  <footer class="foot">
+    <p>Lineups are counted from Retrosheet regular-season game logs; rosters, positions and player
+      careers come from the Lahman Baseball Database.</p>
+    <p class="fine">The information used here was obtained free of charge from and is copyrighted by Retrosheet.
+      Interested parties may contact Retrosheet at <a href="https://www.retrosheet.org" rel="noopener">www.retrosheet.org</a>.
+      Lahman Baseball Database © Sean Lahman, <a href="https://sabr.org/lahman-database/" rel="noopener">SABR</a>, CC BY-SA 3.0.
+      Not affiliated with MLB.</p>
+  </footer>
+
+  <dialog id="dlg-help" class="sheet" aria-labelledby="help-title">
+    <form method="dialog" class="sheet-close"><button aria-label="Close">×</button></form>
+    <h2 id="help-title">How to play</h2>
+    <p>You get an MLB team and a season from 2006–2010. Rebuild the starting lineup the team used most often,
+      in batting order, in <strong>three attempts</strong>.</p>
+    <ul class="rules">
+      <li>Type a name and pick from the list (every MLB player is searchable). Pick a position for each row.</li>
+      <li>Use ▲▼ to move a row, or tap a batting number and then another to swap two rows. Name and position move together.</li>
+      <li>A row locks when player, position and batting slot are all right. You can edit everything else.</li>
+      <li>Missing players or positions, or duplicates, don't use an attempt.</li>
+      <li><strong>AL</strong> puzzles use designated-hitter lineups. <strong>NL</strong> puzzles keep the pitcher in his real
+        batting slot. Any pitcher with 5+ starts for that team that season counts as the pitcher.</li>
+    </ul>
+    <h3>Feedback</h3>
+    <p class="small">Each row gets three separate marks: one for the player, one for his position, and one for his batting slot.</p>
+    <table class="legend-table">
+      <tr><td><span class="chip fb-green">✓</span></td><td><b>Player:</b> right player, right slot. <b>Position:</b> right position for that player (even if he's in the wrong slot). <b>Order:</b> exact slot.</td></tr>
+      <tr><td><span class="chip fb-yellow">↑</span></td><td><b>Player</b> is in the lineup but bats elsewhere. ↑ means earlier, ↓ means later.</td></tr>
+      <tr><td><span class="chip fb-yellow">½</span></td><td><b>Position:</b> a documented secondary position (5+ games that season), or a non-starter's usual role with the team.</td></tr>
+      <tr><td><span class="chip fb-yellow">≈</span></td><td><b>Order:</b> one or two slots away.</td></tr>
+      <tr><td><span class="chip fb-blue">±3</span></td><td><b>Player</b> played for this franchise within three seasons before or after (inclusive), but not this season.</td></tr>
+      <tr><td><span class="chip fb-orange">R</span></td><td><b>Player</b> was on this season's roster but isn't in the lineup.</td></tr>
+      <tr><td><span class="chip fb-gray">✗</span></td><td>No match. A dash (–) means it doesn't apply.</td></tr>
+    </table>
+    <h3>Scoring (out of 100)</h3>
+    <table class="score-table">
+      <thead><tr><th></th><th>Per row</th><th>Credit</th></tr></thead>
+      <tbody>
+        <tr><th>Player</th><td>6.67</td><td>Lineup player 100% (any slot) · nearby season 75% · roster, 35+ starts 85% · roster, fewer 50%</td></tr>
+        <tr><th>Position</th><td>2.22</td><td>Right position 100% · secondary 50% · non-starter's actual role 50%</td></tr>
+        <tr><th>Order</th><td>2.22</td><td>Lineup players only: exact 100% · 1 off 75% · 2 off 50%</td></tr>
+      </tbody>
+    </table>
+    <p class="small">Only a perfect lineup scores 100. Your best attempt counts.</p>
+    <h3>Answer keys</h3>
+    <p class="small">Each answer is the exact nine-man combination (players, positions, batting order) that started most often
+      in that season's Retrosheet game logs, with ties going to the earliest one. AL lineups count DH games only; NL lineups
+      skip DH games and treat lineups that differ only by starting pitcher as the same lineup. The Daily changes at midnight Eastern.</p>
+  </dialog>
+
+  <dialog id="dlg-stats" class="sheet" aria-labelledby="stats-title">
+    <form method="dialog" class="sheet-close"><button aria-label="Close">×</button></form>
+    <h2 id="stats-title">Statistics</h2>
+    <div id="stats-body"></div>
+  </dialog>
+
+  <dialog id="dlg-paste" class="sheet" aria-labelledby="paste-title">
+    <form method="dialog" class="sheet-close"><button aria-label="Close">×</button></form>
+    <h2 id="paste-title">Paste lineup</h2>
+    <p class="small">Nine lines in batting order, each with a name and position, like <code>Derek Jeter SS</code> or
+      <code>2. Jeter, SS</code>. Locked rows are kept.</p>
+    <textarea id="paste-text" rows="9" spellcheck="false" autocomplete="off" autocapitalize="words"
+      placeholder="Johnny Damon CF&#10;Derek Jeter SS&#10;…"></textarea>
+    <div id="paste-preview" class="paste-preview"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn-secondary" id="paste-cancel">Cancel</button>
+      <button type="button" class="btn-primary" id="paste-apply" disabled>Fill lineup</button>
+    </div>
+  </dialog>
+
+  <noscript><p class="wrap">Lineup Nine needs JavaScript.</p></noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

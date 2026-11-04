@@ -1,0 +1,57 @@
+{
+  "generated": "2026-11-04T04:16:47+00:00",
+  "puzzles": 150,
+  "players": 24011,
+  "rules": {
+    "puzzleYears": [
+      2006,
+      2010
+    ],
+    "historyYears": [
+      2003,
+      2013
+    ],
+    "nearbyWindow": 3,
+    "minPitcherStarts": 5,
+    "minSecondaryGames": 5
+  },
+  "sources": {
+    "retrosheet": "Retrosheet regular-season game logs (via the Chadwick Bureau mirror). The information used here was obtained free of charge from and is copyrighted by Retrosheet. Interested parties may contact Retrosheet at www.retrosheet.org.",
+    "lahman": "Sean Lahman Baseball Database, 2025 edition (SABR), via the Lahman R package (github.com/cdalzell/Lahman). Licensed CC BY-SA 3.0."
+  },
+  "files": {
+    "Appearances.RData": {
+      "source": "https://raw.githubusercontent.com/cdalzell/Lahman/master/data/Appearances.RData",
+      "sha256": "8da02f16448edcfa688fb39a191348a38acd8577f3cc5bc00458c6071d58d1e9"
+    },
+    "GL2006.TXT": {
+      "source": "https://raw.githubusercontent.com/chadwickbureau/retrosheet/master/seasons/2006/GL2006.TXT",
+      "sha256": "f5da2797ebd6b11583b662b9e96946b0df086c3f1fbbce5ccdd85bd28dc29b72"
+    },
+    "GL2007.TXT": {
+      "source": "https://raw.githubusercontent.com/chadwickbureau/retrosheet/master/seasons/2007/GL2007.TXT",
+      "sha256": "27241a0aea73ec60cadf810174b74cba32d35a92a06658ca690a000eb9390081"
+    },
+    "GL2008.TXT": {
+      "source": "https://raw.githubusercontent.com/chadwickbureau/retrosheet/master/seasons/2008/GL2008.TXT",
+      "sha256": "c4602acef17d0bfe62e5c44b82c96308c883fb8335fb561edd8a5975dc3ac43f"
+    },
+    "GL2009.TXT": {
+      "source": "https://raw.githubusercontent.com/chadwickbureau/retrosheet/master/seasons/2009/GL2009.TXT",
+      "sha256": "20d941dd7e36e9c6c2e3e36218b84ad957d872e9912d6eaa2de214086259aef8"
+    },
+    "GL2010.TXT": {
+      "source": "https://raw.githubusercontent.com/chadwickbureau/retrosheet/master/seasons/2010/GL2010.TXT",
+      "sha256": "2ca39d49bc4f7021934d341151c2372417e10bec11661d0e49e4b0a796cc09a6"
+    },
+    "People.RData": {
+      "source": "https://raw.githubusercontent.com/cdalzell/Lahman/master/data/People.RData",
+      "sha256": "08d5dd34531c3e7aff1490e768f76d936502b3a8a2b996866ec86321e76c1377"
+    },
+    "Teams.RData": {
+      "source": "https://raw.githubusercontent.com/cdalzell/Lahman/master/data/Teams.RData",
+      "sha256": "84b188d48f410c539b3fa7719bf0f163f83907b6a8072e1a716e45c678b4a025"
+    }
+  },
+  "gaps": []
+}
