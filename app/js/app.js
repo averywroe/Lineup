@@ -56,7 +56,7 @@ async function boot() {
 function route() {
   const h = location.hash.replace(/^#/, '');
   if (h.startsWith('practice')) {
-    const id = h.split('/')[1];
+    const id = h.replace(/^practice[-/]?/, '');      // #practice-2007-SDN (also accepts #practice/2007-SDN)
     openPractice(app.byId.has(id) ? id : store.load('practice:last') || randomId());
   } else openDaily();
 }
@@ -79,15 +79,20 @@ function openDaily() {
   app.today = easternDateKey();
   const id = dailyPuzzleId(app.today, app.puzzles.map((p) => p.id));
   loadGame(app.byId.get(id), 'daily', app.today);
-  if (location.hash && location.hash !== '#daily') history.replaceState(null, '', '#daily');
+  if (location.hash && location.hash !== '#daily') setHash('#daily');
 }
 
 function openPractice(id) {
   app.mode = 'practice';
   store.save('practice:last', id);
   loadGame(app.byId.get(id), 'practice');
-  const want = `#practice/${id}`;
-  if (location.hash !== want) history.replaceState(null, '', want);
+  const want = `#practice-${id}`;
+  if (location.hash !== want) setHash(want);
+}
+
+// Plain #name hashes only, so links work in hosts that pass nothing else through.
+function setHash(h) {
+  try { history.replaceState(null, '', h); } catch { /* sandboxed host: keep the current address */ }
 }
 
 function loadGame(puzzle, mode, day = null) {
@@ -381,15 +386,18 @@ function shareText() {
 
 async function share() {
   const text = shareText();
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ text }); return; }
-  } catch { /* fall through to copy */ }
+  // Copy first, inside the tap, so it works where the share sheet is unavailable.
   try {
     await navigator.clipboard.writeText(text);
     flash($('#btn-share'), 'Copied!');
-  } catch {
-    flash($('#btn-share'), 'Select the text below to copy');
-  }
+    return;
+  } catch { /* try the share sheet */ }
+  try {
+    if (navigator.share) { await navigator.share({ text }); return; }
+  } catch { /* fall through */ }
+  flash($('#btn-share'), 'Select the text below to copy');
+  const pre = $('.share-preview');
+  if (pre) getSelection()?.selectAllChildren(pre);
 }
 
 function flash(btn, text) {

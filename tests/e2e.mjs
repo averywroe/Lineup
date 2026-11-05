@@ -41,7 +41,7 @@ async function enter(i, text, pos) {
 const ok = (msg) => console.log(`ok - ${msg}`);
 
 try {
-  await page.goto(`${base}#practice/${z.id}`);
+  await page.goto(`${base}#practice-${z.id}`);
   await page.waitForSelector('#board .row');
   assert.equal(await page.locator('#dlg-help[open]').count(), 0, 'rules stay behind the How to play button');
   await page.click('#btn-help');
@@ -120,7 +120,7 @@ try {
 
   // Paste lineup on an AL puzzle.
   const al = puzzles.find((p) => p.id === '2006-NYA');
-  await page.goto(`${base}#practice/${al.id}`);
+  await page.goto(`${base}#practice-${al.id}`);
   await page.waitForFunction(() => document.querySelector('#p-team').textContent === 'New York Yankees');
   await page.click('#btn-paste');
   const text = al.lineup.map(([pid, pos], i) => `${i + 1}. ${name[pid].normalize('NFD').replace(/[̀-ͯ]/g, '')}, ${pos}`).join('\n');
