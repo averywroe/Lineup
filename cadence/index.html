@@ -687,40 +687,94 @@ if (typeof document !== 'undefined') (() => {
     save(db);
   }
 
-  /* ---------- Audio ---------- */
-  let ac = null, master = null;
-  function audio() {
+  /* ---------- Audio ----------
+     Primary path: synthesize a WAV in JS and play it through an <audio> element. Media elements play even
+     with the iPhone ringer on silent and inside sandboxed frames. Web Audio is the fallback. */
+  function events(spec) {
+    const ns = spec.notes, ev = [];
+    if (spec.kind === 'single') ev.push([ns[0], 0, 1.6, 0.22]);
+    else if (spec.kind === 'interval') ev.push([ns[0], 0, 1.0, 0.22], [ns[1], 0.75, 1.0, 0.22], [ns[0], 1.6, 1.8, 0.17], [ns[1], 1.6, 1.8, 0.17]);
+    else if (spec.kind === 'chord') { ns.forEach((m, i) => ev.push([m, i * 0.42, 1.2, 0.22])); const b = ns.length * 0.42 + 0.15; ns.forEach(m => ev.push([m, b, 2.0, 0.15])); }
+    else if (spec.kind === 'scale') ns.forEach((m, i) => ev.push([m, i * 0.28, 0.6, 0.18]));
+    else if (spec.kind === 'pluck') ev.push([ns[0], 0, 1.1, 0.22]);
+    return ev;
+  }
+  const HARM = [[1, 1], [2, 0.42], [3, 0.16], [4, 0.08], [5, 0.04]];
+  const wavCache = new Map();
+  function wavURI(spec) {
+    const key = spec.kind + ':' + spec.notes.join(',');
+    if (wavCache.has(key)) return wavCache.get(key);
+    const ev = events(spec), SR = 22050;
+    const total = Math.max(...ev.map(e => e[1] + e[2])) + 0.1, len = Math.ceil(total * SR);
+    const buf = new Float32Array(len);
+    for (const [m, t0, dur, vel] of ev) {
+      const f = 440 * Math.pow(2, (m - 69) / 12), s0 = Math.floor(t0 * SR), n = Math.floor(dur * SR);
+      const k1 = Math.log(0.3) / 0.338, k2 = Math.log(0.0003 / 0.3) / Math.max(0.05, dur - 0.35);
+      const parts = HARM.filter(([h]) => f * h < 9000).map(([h, a]) => [2 * Math.PI * f * h / SR, a]);
+      for (let i = 0; i < n && s0 + i < len; i++) {
+        const t = i / SR;
+        const env = t < 0.012 ? t / 0.012 : t < 0.35 ? Math.exp(k1 * (t - 0.012)) : 0.3 * Math.exp(k2 * (t - 0.35));
+        let v = 0; for (const [w, a] of parts) v += a * Math.sin(w * i);
+        buf[s0 + i] += v * env * vel;
+      }
+    }
+    let peak = 0; for (let i = 0; i < len; i++) peak = Math.max(peak, Math.abs(buf[i]));
+    const gain = peak > 0 ? 0.85 / peak : 1;
+    const bytes = new Uint8Array(44 + len * 2), dv = new DataView(bytes.buffer);
+    const str = (o, t) => { for (let i = 0; i < t.length; i++) bytes[o + i] = t.charCodeAt(i); };
+    str(0, 'RIFF'); dv.setUint32(4, 36 + len * 2, true); str(8, 'WAVEfmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true);
+    dv.setUint16(22, 1, true); dv.setUint32(24, SR, true); dv.setUint32(28, SR * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+    str(36, 'data'); dv.setUint32(40, len * 2, true);
+    for (let i = 0; i < len; i++) dv.setInt16(44 + i * 2, Math.max(-32767, Math.min(32767, Math.round(buf[i] * gain * 32767))), true);
+    let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    const uri = 'data:audio/wav;base64,' + btoa(bin);
+    const out = { uri, total };
+    wavCache.set(key, out);
+    return out;
+  }
+  let ac = null, master = null, mediaOK = true;
+  function webAudio() {
     if (!ac) {
       const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
-      ac = new C(); const comp = ac.createDynamicsCompressor(); master = ac.createGain(); master.gain.value = 0.9;
-      master.connect(comp).connect(ac.destination);
+      ac = new C(); master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
     }
     if (ac.state === 'suspended') ac.resume();
     return ac;
   }
-  function tone(m, t0, dur, vel = 0.22) {
-    const c = ac, f = 440 * Math.pow(2, (m - 69) / 12);
-    const g = c.createGain();
+  function webTone(m, t0, dur, vel) {
+    const c = ac, f = 440 * Math.pow(2, (m - 69) / 12), g = c.createGain();
     g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vel, t0 + 0.012);
     g.gain.exponentialRampToValueAtTime(vel * 0.3, t0 + 0.35); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(9000, f * 7); lp.Q.value = 0.3;
-    [[1, 1], [2, 0.42], [3, 0.16], [4, 0.08], [5, 0.04]].forEach(([h, a]) => {
-      const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f * h; o.detune.value = (h - 1) * 1.5;
-      const og = c.createGain(); og.gain.value = a; o.connect(og).connect(lp); o.start(t0); o.stop(t0 + dur + 0.05);
+    HARM.forEach(([h, a]) => {
+      if (f * h >= 9000) return;
+      const o = c.createOscillator(); o.frequency.value = f * h;
+      const og = c.createGain(); og.gain.value = a; o.connect(og).connect(g); o.start(t0); o.stop(t0 + dur + 0.05);
     });
-    lp.connect(g).connect(master);
+    g.connect(master);
   }
+  function playWeb(spec) {
+    if (!webAudio()) return;
+    const t = ac.currentTime + 0.05;
+    events(spec).forEach(([m, t0, dur, vel]) => webTone(m, t + t0, dur, vel));
+  }
+  const players = [new Audio(), new Audio()];
+  players.forEach(a => { a.preload = 'auto'; a.setAttribute('playsinline', ''); });
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch { /* not supported */ }
   let playTimer = null;
   function play(spec, btn) {
-    if (!audio() || !spec) return;
-    const t = ac.currentTime + 0.05, ns = spec.notes; let end = 0;
-    if (spec.kind === 'single') { tone(ns[0], t, 1.6); end = 1.6; }
-    else if (spec.kind === 'interval') { tone(ns[0], t, 1.0); tone(ns[1], t + 0.75, 1.0); tone(ns[0], t + 1.6, 1.8, 0.17); tone(ns[1], t + 1.6, 1.8, 0.17); end = 3.4; }
-    else if (spec.kind === 'chord') { ns.forEach((m, i) => tone(m, t + i * 0.42, 1.2)); const b = t + ns.length * 0.42 + 0.15; ns.forEach(m => tone(m, b, 2.0, 0.15)); end = ns.length * 0.42 + 2.2; }
-    else if (spec.kind === 'scale') { ns.forEach((m, i) => tone(m, t + i * 0.28, 0.6, 0.18)); end = ns.length * 0.28 + 0.6; }
-    if (btn) { btn.classList.add('playing'); clearTimeout(playTimer); playTimer = setTimeout(() => btn.classList.remove('playing'), end * 1000); }
+    if (!spec) return;
+    const total = Math.max(...events(spec).map(e => e[1] + e[2]));
+    if (mediaOK) {
+      try {
+        const el = spec.kind === 'pluck' ? players[1] : players[0];
+        el.pause(); el.src = wavURI(spec).uri;
+        const pr = el.play();
+        if (pr && pr.catch) pr.catch(() => { mediaOK = false; playWeb(spec); });
+      } catch { mediaOK = false; playWeb(spec); }
+    } else playWeb(spec);
+    if (btn) { btn.classList.add('playing'); clearTimeout(playTimer); playTimer = setTimeout(() => btn.classList.remove('playing'), total * 1000); }
   }
-  function pluck(m) { if (!audio()) return; tone(m, ac.currentTime + 0.01, 1.1, 0.2); }
+  function pluck(m) { play({ kind: 'pluck', notes: [m] }); }
 
   /* ---------- Staff drawing ---------- */
   const SP = 12, HS = SP / 2;
