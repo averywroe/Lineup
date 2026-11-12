@@ -107,7 +107,7 @@ are shared under the same license. Not affiliated with Major League Baseball or 
 
 ## Wedding site
 
-`wedding/` is a separate static site (Avery & Madison, October 23, 2027) that shares nothing with the game.
+`wedding/` is a separate static site (Avery & Madisyn, October 23, 2027) that shares nothing with the game.
 Open `wedding/index.html` directly, or host the folder on any static host. Sections still waiting on
 details are marked with `TODO` comments in the HTML; the RSVP form stays hidden until `data-endpoint`
 on `#rsvp-form` is set to a form service URL.
