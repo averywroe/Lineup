@@ -104,3 +104,13 @@ contact Retrosheet at [www.retrosheet.org](https://www.retrosheet.org).
 
 Lahman Baseball Database © Sean Lahman, published by SABR under CC BY-SA 3.0. The files derived from it in `app/data/`
 are shared under the same license. Not affiliated with Major League Baseball or any team.
+
+---
+
+# Cadence (music theory daily puzzle)
+
+`cadence/index.html` is a separate, self-contained game: six bars of music theory a day (name the note, the key,
+the interval and the chord, build a chord on a keyboard, and identify a sound by ear). Two tries per bar, 12 points
+a day, and difficulty rises through the week (Mon–Tue easy, Wed–Fri medium, weekends hard). Practice mode gives
+unlimited sets at any level or drills one puzzle type. Serve it like the main app (`cd cadence && python3 -m http.server`);
+`tests/cadence.test.mjs` checks every generated puzzle is answerable and correctly spelled.

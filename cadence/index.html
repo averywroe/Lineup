@@ -1,0 +1,1035 @@
+<title>Cadence Daily</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400..700&family=Noto+Music&display=swap">
+<style>
+/* Layout: one narrow column read like a single line of score. Six bars across the top track the day; the open bar is the work surface below. */
+:root {
+  --paper: #ECEFF4;
+  --surface: #FAFBFD;
+  --ink: #131A29;
+  --muted: #586274;
+  --line: #C3CAD6;
+  --staff: #39425A;
+  --accent: #1E3CB4;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCE2F8;
+  --mark: #F3D53A;
+  --mark-soft: rgba(243, 213, 58, .38);
+  --good: #18794C;
+  --good-bg: #DAF0E3;
+  --near: #A1630E;
+  --near-bg: #F6E8CF;
+  --bad: #B3322A;
+  --bad-bg: #F6DDDA;
+  --f-display: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+  --f-body: "Instrument Sans", "Noto Music", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-music: "Noto Music", "Segoe UI Symbol", "Apple Symbols", serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F131B; --surface: #181E29; --ink: #E7EBF2; --muted: #9AA4B6; --line: #3A4357; --staff: #AEB8CB;
+    --accent: #93A6FF; --accent-ink: #0F1424; --accent-soft: #252F52; --mark: #E3C52C; --mark-soft: rgba(227, 197, 44, .22);
+    --good: #5CC994; --good-bg: #173527; --near: #E3A54A; --near-bg: #3A2C15; --bad: #F0857B; --bad-bg: #3E1F1D;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F131B; --surface: #181E29; --ink: #E7EBF2; --muted: #9AA4B6; --line: #3A4357; --staff: #AEB8CB;
+  --accent: #93A6FF; --accent-ink: #0F1424; --accent-soft: #252F52; --mark: #E3C52C; --mark-soft: rgba(227, 197, 44, .22);
+  --good: #5CC994; --good-bg: #173527; --near: #E3A54A; --near-bg: #3A2C15; --bad: #F0857B; --bad-bg: #3E1F1D;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--paper); }
+body {
+  color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 620px; margin: 0 auto; display: grid; gap: 18px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.music { font-family: var(--f-music); }
+
+/* Header */
+header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { min-width: 0; }
+.brand h1 {
+  font-family: var(--f-display); font-weight: 800; font-size: clamp(2.1rem, 8vw, 2.8rem); line-height: .95;
+  letter-spacing: -.035em; margin: 0; font-variation-settings: "opsz" 96;
+}
+.brand h1 .fermata { font-family: var(--f-music); font-weight: 400; color: var(--accent); font-size: .55em; vertical-align: .55em; margin-left: .06em; }
+.brand p { margin: 6px 0 0; color: var(--muted); font-size: .9rem; }
+.brand p b { color: var(--ink); font-weight: 600; }
+.tools { display: flex; gap: 8px; align-items: center; }
+.tabs { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.tabs button { border: 0; background: transparent; padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: .9rem; color: var(--muted); }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+.icon-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-weight: 700; }
+
+/* Practice controls */
+.practice-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 7px 12px; font-size: .88rem; font-weight: 600; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--ink); }
+select { font: inherit; font-size: .88rem; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 9px 16px; border-radius: 8px; font-weight: 600; font-size: .95rem; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* The six-bar system */
+.system { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)) 34px; }
+.bar { border: 0; background: none; padding: 0; display: grid; gap: 6px; text-align: center; min-width: 0; }
+.bar-staff {
+  position: relative; height: 41px;
+  background-image: repeating-linear-gradient(to bottom, var(--staff) 0 1px, transparent 1px 8px);
+  background-size: 100% 33px; background-repeat: no-repeat; background-position: 0 4px;
+  border-right: 1.5px solid var(--staff);
+}
+.bar:first-child .bar-staff { border-left: 1.5px solid var(--staff); }
+.bar-staff::before { content: ""; position: absolute; inset: 0 1px; border-radius: 3px; }
+.bar.is-current .bar-staff::before { background: var(--mark-soft); }
+.bar-glyph { position: absolute; inset: 0; display: grid; place-items: center; }
+.bar-glyph svg { width: 22px; height: 18px; overflow: visible; }
+.bar-glyph .rest { font-family: var(--f-music); font-size: 32px; line-height: 1; color: var(--muted); transform: translateY(-3px); }
+.bar-label { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar.is-current .bar-label { color: var(--ink); }
+.bar.end .bar-staff { border-right: 0; background-size: 100% 33px; }
+.bar.end .bar-staff::after { content: ""; position: absolute; right: 0; top: 4px; height: 33px; width: 9px; border-left: 1.5px solid var(--staff); border-right: 5px solid var(--staff); }
+.bar.end .bar-staff::before { right: 12px; }
+
+/* Card */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px clamp(16px, 4vw, 28px) 24px; display: grid; gap: 16px; min-width: 0; }
+.eyebrow { font-size: .75rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; display: flex; gap: 8px; flex-wrap: wrap; }
+.eyebrow .chip { border-radius: 999px; padding: 0 8px; background: var(--accent-soft); color: var(--ink); }
+.card h2 { font-family: var(--f-display); font-weight: 700; font-size: clamp(1.45rem, 5.4vw, 1.9rem); line-height: 1.1; letter-spacing: -.02em; margin: 4px 0 0; text-wrap: balance; }
+.card .sub { margin: 4px 0 0; color: var(--muted); }
+.staff-wrap { display: flex; justify-content: center; overflow-x: auto; padding: 4px 0; }
+.staff-wrap svg { max-width: 100%; height: auto; }
+.st-line { stroke: var(--staff); stroke-width: 1.1; }
+.st-bar { stroke: var(--staff); stroke-width: 1.6; }
+.st-ledger { stroke: var(--staff); stroke-width: 1.4; }
+.nh { fill: var(--ink); }
+.nh-hole { fill: var(--surface); }
+.glyph { fill: var(--ink); font-family: var(--f-music); }
+
+/* Answers */
+.choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.choice { border: 1.5px solid var(--line); background: var(--paper); border-radius: 8px; padding: 13px 12px; font-weight: 600; font-size: 1rem; text-align: center; transition: border-color .12s, transform .12s; }
+.choice:hover:not(:disabled) { border-color: var(--accent); }
+.choice:active:not(:disabled) { transform: translateY(1px); }
+.choice:disabled { cursor: default; }
+.choice.is-wrong { background: var(--bad-bg); border-color: var(--bad); color: var(--bad); text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.choice.is-right { background: var(--good-bg); border-color: var(--good); color: var(--good); }
+.done .choice:not(.is-right):not(.is-wrong) { opacity: .55; }
+
+.note-pad { display: grid; gap: 12px; }
+.acc-row { display: flex; gap: 8px; justify-content: center; align-items: center; }
+.acc-row .lbl { font-size: .8rem; color: var(--muted); margin-right: 4px; }
+.acc-btn { width: 52px; height: 46px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--paper); font-family: var(--f-music); font-size: 34px; line-height: 1; padding: 0 0 4px; }
+.acc { font-family: var(--f-music); font-size: 1.5em; line-height: 0; font-weight: 400; margin-left: .03em; }
+.acc-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.letters { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.letters .choice { padding: 14px 0; font-family: var(--f-display); font-size: 1.25rem; }
+
+.piano { position: relative; height: clamp(130px, 34vw, 170px); user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.wk, .bk { position: absolute; top: 0; border-radius: 0 0 6px 6px; padding: 0; }
+.wk { height: 100%; background: #FBFBF8; border: 1px solid #8E96A6; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 7px; font-size: .72rem; font-weight: 600; color: #6A7282; }
+.bk { height: 60%; background: #1B2130; border: 1px solid #0B0E16; z-index: 2; }
+.wk.on { background: #C9D3FA; color: #1E3CB4; }
+.bk.on { background: #3D58D6; }
+.wk.ok { background: #BFE6CF; color: #0F5C38; }
+.bk.ok { background: #1F8A57; }
+.wk.no { background: #F3C9C4; color: #8E241E; }
+.bk.no { background: #B3322A; }
+.piano .dot { position: absolute; left: 50%; bottom: 26px; width: 8px; height: 8px; border-radius: 50%; transform: translateX(-50%); background: currentColor; }
+.bk .dot { bottom: 10px; background: #fff; }
+
+.ear { display: grid; justify-items: center; gap: 10px; padding: 8px 0; }
+.play-big { width: 92px; height: 92px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; box-shadow: 0 6px 18px -8px var(--accent); }
+.play-big svg { width: 34px; height: 34px; margin-left: 5px; }
+.play-big.playing { animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(.94); } }
+@media (prefers-reduced-motion: reduce) { .play-big.playing { animation: none; } .choice { transition: none; } }
+.ear small { color: var(--muted); }
+
+.fb { margin: 0; padding: 10px 14px; border-radius: 8px; font-weight: 500; }
+.fb.near { background: var(--near-bg); color: var(--near); }
+.fb.good { background: var(--good-bg); color: var(--good); }
+.fb.bad { background: var(--bad-bg); color: var(--bad); }
+.fb b { font-weight: 700; }
+.explain { border-top: 1px dashed var(--line); padding-top: 14px; display: grid; gap: 8px; }
+.explain h3 { margin: 0; font-size: .75rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+.explain p { margin: 0; max-width: 62ch; }
+
+/* Results */
+.result-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.score { font-family: var(--f-display); font-weight: 800; font-size: 3.4rem; line-height: 1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.score span { font-size: 1.4rem; color: var(--muted); font-weight: 600; letter-spacing: 0; }
+.tier { font-family: var(--f-display); font-weight: 700; font-size: 1.3rem; }
+.tier-note { margin: 2px 0 0; color: var(--muted); font-size: .92rem; }
+.rows { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: 74px 22px minmax(0, 1fr); gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); border-left: 0; border-right: 0; border-top: 0; background: none; text-align: left; width: 100%; }
+.row .k { font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+.row .v { min-width: 0; overflow-wrap: anywhere; }
+.row svg { width: 20px; height: 16px; }
+.share-text { width: 100%; font: inherit; font-size: .9rem; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); resize: none; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.stat { display: grid; gap: 2px; text-align: center; }
+.stat b { font-family: var(--f-display); font-size: 1.6rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.dist { display: grid; gap: 6px; }
+.dist-row { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 10px; align-items: center; font-size: .85rem; }
+.dist-row .barfill { height: 18px; border-radius: 3px; background: var(--line); min-width: 18px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: .75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dist-row.today .barfill { background: var(--accent); color: var(--accent-ink); }
+.countdown { font-variant-numeric: tabular-nums; font-weight: 700; }
+.section-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; margin: 0; }
+
+dialog { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink); max-width: min(540px, calc(100vw - 32px)); padding: 22px 24px; }
+dialog::backdrop { background: rgba(10, 14, 24, .45); }
+dialog h2 { font-family: var(--f-display); margin: 0 0 8px; font-size: 1.5rem; }
+dialog ul { padding-left: 1.1em; margin: 8px 0; }
+dialog li { margin: 4px 0; }
+dialog p { margin: 8px 0; }
+.foot { color: var(--muted); font-size: .8rem; text-align: center; }
+@media (max-width: 420px) {
+  .bar-label { text-transform: none; letter-spacing: 0; font-size: .7rem; }
+  .choices { grid-template-columns: minmax(0, 1fr); }
+  .row { grid-template-columns: 62px 20px minmax(0, 1fr); }
+  .stats b { font-size: 1.35rem; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Cadence<span class="fermata" aria-hidden="true">𝄐</span></h1>
+      <p id="subtitle">Six bars of music theory, every day.</p>
+    </div>
+    <div class="tools">
+      <div class="tabs" role="tablist" aria-label="Mode">
+        <button id="tab-daily" role="tab" aria-selected="true" data-act="mode" data-mode="daily">Today</button>
+        <button id="tab-practice" role="tab" aria-selected="false" data-act="mode" data-mode="practice">Practice</button>
+      </div>
+      <button class="icon-btn" id="help-btn" data-act="help" aria-label="How to play">?</button>
+    </div>
+  </header>
+  <div class="practice-bar" id="practice-bar" hidden></div>
+  <nav class="system" id="system" aria-label="Today's bars"></nav>
+  <main class="card" id="stage" aria-live="polite"></main>
+  <p class="foot">Progress and streaks are saved in this browser.</p>
+</div>
+
+<dialog id="help">
+  <h2>How to play</h2>
+  <p>Each day brings six bars, one of each kind of puzzle:</p>
+  <ul>
+    <li><b>Note</b>: name the note on the staff.</li>
+    <li><b>Key</b>: name the key from its key signature.</li>
+    <li><b>Interval</b>: name the distance between two notes.</li>
+    <li><b>Chord</b>: name the chord, even when it's inverted.</li>
+    <li><b>Build</b>: play the chord on the keyboard. Any octave, any order.</li>
+    <li><b>Ear</b>: listen, then name what you heard.</li>
+  </ul>
+  <p>You get two tries per bar. First try earns 2 points, second try 1. A perfect day is 12, a <i>perfect authentic cadence</i>.</p>
+  <p>The week gets harder like a crossword: Monday and Tuesday are easy, Wednesday to Friday are medium, and the weekend is hard. A new puzzle arrives at midnight.</p>
+  <p>Practice mode gives you unlimited sets at any level, or drills one puzzle type.</p>
+  <div class="btn-row"><button class="btn primary" id="help-close" data-act="help-close">Got it</button></div>
+</dialog>
+
+<script id="theory">
+/* ---------- Music theory engine (no DOM) ---------- */
+const Theory = (() => {
+  'use strict';
+  function hashStr(s) { let h = 2166136261 >>> 0; for (const c of s) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function R(rng) {
+    return {
+      int: (a, b) => a + Math.floor(rng() * (b - a + 1)),
+      pick: arr => arr[Math.floor(rng() * arr.length)],
+      chance: p => rng() < p,
+      shuffle: arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; },
+    };
+  }
+
+  const LET = 'CDEFGAB', NAT = [0, 2, 4, 5, 7, 9, 11];
+  const ACC = { '-2': '𝄫', '-1': '♭', '0': '', '1': '♯', '2': '𝄪' };
+  const N = (l, a, o) => ({ l, a, o });
+  const midi = n => 12 * (n.o + 1) + NAT[n.l] + n.a;
+  const dia = n => n.o * 7 + n.l;
+  const pcOf = n => (((NAT[n.l] + n.a) % 12) + 12) % 12;
+  const nm = n => LET[n.l] + ACC[n.a];
+  const fromDia = (d, a = 0) => N(((d % 7) + 7) % 7, a, Math.floor(d / 7));
+  const P = (s, o = 4) => N(LET.indexOf(s[0]), s[1] === '#' ? 1 : s[1] === 'b' ? -1 : 0, o);
+  const pretty = s => s[0] + s.slice(1).replace('#', '♯').replace('b', '♭');
+  const cap = s => s[0].toUpperCase() + s.slice(1);
+  const WEIRD = n => (n.a === 1 && (n.l === 2 || n.l === 6)) || (n.a === -1 && (n.l === 0 || n.l === 3));
+  const okAcc = ns => ns.every(n => Math.abs(n.a) <= 1);
+  const ORD = ['', '1st', '2nd', '3rd', '4th', '5th'];
+
+  /* Intervals */
+  const PERF = new Set([1, 4, 5]);
+  const simple = num => ((num - 1) % 7) + 1;
+  const baseSemi = num => NAT[(num - 1) % 7] + 12 * Math.floor((num - 1) / 7);
+  function qOff(q, num) { return PERF.has(simple(num)) ? { P: 0, A: 1, d: -1 }[q] : { M: 0, m: -1, A: 1, d: -2 }[q]; }
+  const ivSemi = (q, num) => baseSemi(num) + qOff(q, num);
+  function up(n, q, num) { const r = fromDia(dia(n) + num - 1); r.a = midi(n) + ivSemi(q, num) - midi(r); return r; }
+  function down(n, q, num) { const r = fromDia(dia(n) - (num - 1)); r.a = midi(n) - ivSemi(q, num) - midi(r); return r; }
+  function between(a, b) {
+    const num = dia(b) - dia(a) + 1, semi = midi(b) - midi(a), off = semi - baseSemi(num);
+    const map = PERF.has(simple(num)) ? { 0: 'P', 1: 'A', '-1': 'd' } : { 0: 'M', '-1': 'm', 1: 'A', '-2': 'd' };
+    return { q: map[off], num, semi };
+  }
+  const QN = { P: 'perfect', M: 'major', m: 'minor', A: 'augmented', d: 'diminished' };
+  const ordinal = num => num === 1 ? 'unison' : num === 8 ? 'octave' : ['', '', '2nd', '3rd', '4th', '5th', '6th', '7th'][num] || num + 'th';
+  const ivName = (q, num) => QN[q] + ' ' + ordinal(num);
+  const IVS = [['m', 2], ['M', 2], ['A', 2], ['m', 3], ['M', 3], ['d', 4], ['P', 4], ['A', 4], ['d', 5], ['P', 5], ['A', 5], ['m', 6], ['M', 6], ['A', 6], ['d', 7], ['m', 7], ['M', 7], ['P', 8]];
+  const IV_MED = IVS.filter(([q, n]) => !['A2', 'd4', 'A5', 'A6', 'd7'].includes(q + n));
+  const IV_EASY = [['M', 2], ['m', 3], ['M', 3], ['P', 4], ['P', 5], ['M', 6], ['P', 8]];
+  const SONGS = {
+    m2: 'the <i>Jaws</i> theme', M2: '“Happy Birthday” (Hap-py <i>Birth</i>-)', m3: '“Greensleeves”', M3: '“When the Saints Go Marching In”',
+    P4: '“Here Comes the Bride”', A4: '“Maria” from <i>West Side Story</i>', d5: '“Maria” from <i>West Side Story</i>', P5: '“Twinkle, Twinkle, Little Star”',
+    m6: '“The Entertainer” (the leap after the pickup)', M6: '“My Bonnie Lies Over the Ocean”', m7: '“Somewhere” from <i>West Side Story</i>',
+    M7: 'the chorus of “Take On Me”', P8: '“Somewhere Over the Rainbow”',
+  };
+
+  /* Chords */
+  const CH = {
+    maj: { n: 'major', iv: [['M', 3], ['P', 5]], how: 'a major 3rd with a minor 3rd on top' },
+    min: { n: 'minor', iv: [['m', 3], ['P', 5]], how: 'a minor 3rd with a major 3rd on top' },
+    dim: { n: 'diminished', iv: [['m', 3], ['d', 5]], how: 'two minor 3rds stacked' },
+    aug: { n: 'augmented', iv: [['M', 3], ['A', 5]], how: 'two major 3rds stacked' },
+    maj7: { n: 'major 7th', iv: [['M', 3], ['P', 5], ['M', 7]], how: 'a major triad plus a major 7th' },
+    dom7: { n: 'dominant 7th', iv: [['M', 3], ['P', 5], ['m', 7]], how: 'a major triad plus a minor 7th' },
+    min7: { n: 'minor 7th', iv: [['m', 3], ['P', 5], ['m', 7]], how: 'a minor triad plus a minor 7th' },
+    hdim7: { n: 'half-diminished 7th', iv: [['m', 3], ['d', 5], ['m', 7]], how: 'a diminished triad plus a minor 7th' },
+    dim7: { n: 'diminished 7th', iv: [['m', 3], ['d', 5], ['d', 7]], how: 'three minor 3rds stacked (a diminished triad plus a diminished 7th)' },
+  };
+  const TRIADS = ['maj', 'min', 'dim', 'aug'], SEVENTHS = ['maj7', 'dom7', 'min7', 'hdim7', 'dim7'];
+  const chord = (root, q) => [{ ...root }, ...CH[q].iv.map(([iq, num]) => up(root, iq, num))];
+  function invert(notes, k) {
+    const ns = notes.map(n => ({ ...n }));
+    for (let i = 0; i < k; i++) ns[i].o += 1;
+    return [...ns.slice(k), ...ns.slice(0, k)];
+  }
+  const INV = ['root position', 'first inversion', 'second inversion', 'third inversion'];
+  const chordLabel = (root, q) => `${nm(root)} ${CH[q].n}`;
+
+  /* Keys */
+  const MAJ_KEYS = { 0: 'C', 1: 'G', 2: 'D', 3: 'A', 4: 'E', 5: 'B', 6: 'F#', 7: 'C#', '-1': 'F', '-2': 'Bb', '-3': 'Eb', '-4': 'Ab', '-5': 'Db', '-6': 'Gb', '-7': 'Cb' };
+  const MIN_KEYS = { 0: 'A', 1: 'E', 2: 'B', 3: 'F#', 4: 'C#', 5: 'G#', 6: 'D#', 7: 'A#', '-1': 'D', '-2': 'G', '-3': 'C', '-4': 'F', '-5': 'Bb', '-6': 'Eb', '-7': 'Ab' };
+  const SHARP_ORDER = 'FCGDAEB', FLAT_ORDER = 'BEADGCF';
+  const keyTonic = (n, mode) => pretty((mode === 'major' ? MAJ_KEYS : MIN_KEYS)[n]);
+  const keyName = (n, mode) => `${keyTonic(n, mode)} ${mode}`;
+  const keyAccs = n => (n > 0 ? SHARP_ORDER : FLAT_ORDER).slice(0, Math.abs(n)).split('').map(L => L + (n > 0 ? '♯' : '♭'));
+
+  /* Clefs: diatonic number of the bottom staff line */
+  const CLEF = { treble: { base: 30 }, bass: { base: 18 }, alto: { base: 24 } };
+  const CLEF_RULE = {
+    treble: 'In treble clef the lines, bottom to top, are E G B D F (“Every Good Boy Does Fine”) and the spaces spell F A C E.',
+    bass: 'In bass clef the lines, bottom to top, are G B D F A (“Good Boys Do Fine Always”) and the spaces are A C E G (“All Cows Eat Grass”).',
+    alto: 'Alto clef puts middle C on the middle line. Its lines are F A C E G and its spaces are G B D F.',
+  };
+  function where(p) {
+    if (p >= 0 && p <= 8) return p % 2 === 0 ? `on the ${ORD[p / 2 + 1]} line` : `in the ${ORD[(p + 1) / 2]} space`;
+    if (p === -1) return 'in the space just below the staff';
+    if (p === 9) return 'in the space just above the staff';
+    if (p < -1) { const k = Math.floor(-p / 2); return p % 2 === 0 ? `on the ${ORD[k]} ledger line below the staff` : `just below the ${ORD[k]} ledger line under the staff`; }
+    const q = p - 8, k = Math.floor(q / 2);
+    return q % 2 === 0 ? `on the ${ORD[k]} ledger line above the staff` : `just above the ${ORD[k]} ledger line over the staff`;
+  }
+
+  /* ---------- Generators ---------- */
+  function genNote(r, lv) {
+    const clef = r.pick(lv >= 3 ? ['treble', 'treble', 'bass', 'bass', 'alto'] : ['treble', 'bass']);
+    const [lo, hi] = [[-1, 9], [-3, 11], [-6, 14]][lv - 1];
+    let n;
+    for (let t = 0; t < 50; t++) {
+      n = fromDia(CLEF[clef].base + r.int(lo, hi), lv === 1 ? 0 : r.pick([-1, 0, 0, 1]));
+      if (lv < 3 && WEIRD(n)) continue;
+      break;
+    }
+    const p = dia(n) - CLEF[clef].base;
+    const accTxt = n.a === 1 ? ' The sharp raises it a half step.' : n.a === -1 ? ' The flat lowers it a half step.' : '';
+    const ledger = (p < -1 || p > 9) ? ' Count by step from the nearest staff line.' : '';
+    return {
+      kind: 'note', prompt: 'Name this note', sub: `${cap(clef)} clef`,
+      staff: { clef, cols: [[n]] }, answer: `${n.l},${n.a}`, answerLabel: nm(n), target: n,
+      audio: { kind: 'single', notes: [midi(n)] },
+      explain: `It sits ${where(p)}. ${CLEF_RULE[clef]}${ledger}${accTxt} That makes it <b>${nm(n)}${n.o}</b>${midi(n) === 60 && n.a === 0 ? ', middle C' : ''}.`,
+    };
+  }
+
+  function genKey(r, lv) {
+    const maxN = [0, 3, 5, 7][lv];
+    const n = r.int(1, maxN) * (r.chance(0.5) ? 1 : -1);
+    const mode = lv === 1 ? 'major' : r.chance(lv === 2 ? 0.3 : 0.5) ? 'minor' : 'major';
+    const clef = lv === 1 ? 'treble' : r.chance(0.3) ? 'bass' : 'treble';
+    const near = r.shuffle([n + 1, n - 1, n + 2, n - 2].filter(x => x !== n && x !== -n && Math.abs(x) <= 7 && x !== 0));
+    const ds = [-n, ...near].slice(0, 3);
+    const choices = r.shuffle([n, ...ds]).map(x => ({ id: String(x), label: keyName(x, mode) }));
+    const k = Math.abs(n), accs = keyAccs(n), maj = keyName(n, 'major');
+    let ex = `${k} ${n > 0 ? 'sharp' : 'flat'}${k > 1 ? 's' : ''}: ${accs.join(' ')}. `;
+    if (n > 0) ex += `The last sharp is ${accs[k - 1]}, and a half step above it is ${keyTonic(n, 'major')}, so the major key is ${maj}.`;
+    else if (n === -1) ex += 'One flat is the one to memorize: F major.';
+    else ex += `The second-to-last flat, ${accs[k - 2]}, names the major key: ${maj}.`;
+    ex += mode === 'minor' ? ` For the minor key, go down a minor 3rd from ${keyTonic(n, 'major')} to get <b>${keyName(n, 'minor')}</b>.` : ` Its relative minor, a minor 3rd lower, is ${keyName(n, 'minor')}.`;
+    return {
+      kind: 'key', prompt: `Name this ${mode} key`, sub: `${cap(clef)} clef key signature`,
+      staff: { clef, key: n, cols: [] }, choices, answer: String(n), answerLabel: keyName(n, mode), mode, n,
+      audio: { kind: 'scale', notes: scaleMidis(n, mode) },
+      explain: ex,
+    };
+  }
+  function scaleMidis(n, mode) {
+    const t = P((mode === 'major' ? MAJ_KEYS : MIN_KEYS)[n], 4);
+    const qs = mode === 'major' ? ['P', 'M', 'M', 'P', 'P', 'M', 'M', 'P'] : ['P', 'M', 'm', 'P', 'P', 'm', 'm', 'P'];
+    let ms = qs.map((q, i) => i === 0 ? midi(t) : midi(up(t, q, i + 1)));
+    if (ms[0] > 65) ms = ms.map(m => m - 12);
+    return ms;
+  }
+
+  function ivChoices(r, q, num, pool) {
+    const semi = ivSemi(q, num);
+    const others = pool.filter(([a, b]) => !(a === q && b === num));
+    const near = others.filter(([a, b]) => b === num || Math.abs(ivSemi(a, b) - semi) <= 1);
+    let picks = r.shuffle(near).slice(0, 3);
+    if (picks.length < 3) picks = picks.concat(r.shuffle(others.filter(x => !picks.includes(x))).slice(0, 3 - picks.length));
+    return r.shuffle([[q, num], ...picks]).map(([a, b]) => ({ id: a + b, label: cap(ivName(a, b)) }));
+  }
+  function ivRef(q, num) {
+    if (PERF.has(simple(num))) return `A perfect ${ordinal(num)} is ${ivSemi('P', num)} half steps.`;
+    return `A major ${ordinal(num)} is ${ivSemi('M', num)} half steps and a minor ${ordinal(num)} is ${ivSemi('m', num)}.`;
+  }
+  function genInterval(r, lv) {
+    const pool = [IV_EASY, IV_MED, IVS][lv - 1];
+    let q, num, lo, hi, clef;
+    for (let t = 0; t < 100; t++) {
+      [q, num] = r.pick(pool);
+      clef = lv === 1 ? 'treble' : r.chance(0.3) ? 'bass' : 'treble';
+      const d = clef === 'treble' ? r.int(28, 33) : r.int(16, 21);
+      lo = fromDia(d, lv === 1 ? 0 : r.pick(lv === 2 ? [0, 0, 0, -1, 1] : [0, 0, -1, 1]));
+      hi = up(lo, q, num);
+      if (!okAcc([lo, hi])) continue;
+      if (lv < 3 && (WEIRD(lo) || WEIRD(hi))) continue;
+      break;
+    }
+    const harmonic = r.chance(0.5);
+    const letters = []; for (let i = 0; i < num; i++) letters.push(LET[(lo.l + i) % 7]);
+    const semi = ivSemi(q, num), key = q + num;
+    return {
+      kind: 'interval', prompt: 'Name this interval', sub: `${harmonic ? 'Harmonic' : 'Melodic'}, ${clef} clef`,
+      staff: { clef, cols: harmonic ? [[lo, hi]] : [[lo], [hi]] },
+      choices: ivChoices(r, q, num, lv === 1 ? IV_MED.filter(([a]) => a !== 'A' && a !== 'd') : lv === 2 ? IV_MED : IVS),
+      answer: key, answerLabel: cap(ivName(q, num)), num, semi, lo, hi,
+      audio: { kind: 'interval', notes: [midi(lo), midi(hi)] },
+      explain: `${nm(lo)} up to ${nm(hi)}: count the letter names ${letters.join(' ')}. That's ${num} letters, so it's ${num === 8 ? 'an octave' : 'a ' + ordinal(num)}. It spans ${semi} half steps. ${ivRef(q, num)} So it's a <b>${ivName(q, num)}</b>.${SONGS[key] ? ` Think of ${SONGS[key]}.` : ''}`,
+    };
+  }
+
+  function voiceChord(notes, clef) {
+    let v = notes.map(n => ({ ...n }));
+    const base = CLEF[clef].base;
+    const top = () => dia(v[v.length - 1]) - base;
+    while (top() > 12) v = v.map(n => ({ ...n, o: n.o - 1 }));
+    while (dia(v[0]) - base < -3) v = v.map(n => ({ ...n, o: n.o + 1 }));
+    return v;
+  }
+  function chordChoices(r, root, q, voiced, inv, quals) {
+    const correct = `${root.l},${root.a},${q}`, opts = [];
+    const add = (rt, qq) => {
+      if (opts.length >= 3 || !rt || Math.abs(rt.a) > 1) return;
+      const id = `${rt.l},${rt.a},${qq}`;
+      if (id === correct || opts.some(o => o.id === id)) return;
+      opts.push({ id, label: chordLabel(rt, qq) });
+    };
+    const size = CH[q].iv.length;
+    const same = r.shuffle(quals.filter(x => x !== q && CH[x].iv.length === size));
+    const tones = chord(root, q);
+    if (inv > 0) add(voiced[0], q); else add(tones[1], q);
+    same.forEach(x => add(root, x));
+    same.forEach(x => add(tones[1], x));
+    add(tones[2], q);
+    add(down(root, 'm', 3), same[0] || q);
+    for (let l = 0; opts.length < 3 && l < 7; l++) add(N(l, 0, 4), q);
+    return r.shuffle([{ id: correct, label: chordLabel(root, q) }, ...opts]);
+  }
+  function genChord(r, lv) {
+    const quals = lv === 1 ? ['maj', 'min'] : lv === 2 ? TRIADS : [...TRIADS, ...SEVENTHS];
+    let q, root, tones, inv, clef, voiced;
+    for (let t = 0; t < 100; t++) {
+      q = lv === 3 ? (r.chance(0.65) ? r.pick(SEVENTHS) : r.pick(TRIADS)) : r.pick(quals);
+      clef = lv === 1 ? 'treble' : r.chance(0.3) ? 'bass' : 'treble';
+      const a = lv === 1 ? (r.chance(0.2) ? -1 : 0) : r.pick([0, 0, -1, 1]);
+      root = fromDia((clef === 'treble' ? 28 : 16) + r.int(0, 6), a);
+      tones = chord(root, q);
+      if (!okAcc(tones)) continue;
+      if (lv < 3 && tones.some(WEIRD)) continue;
+      if (lv === 1 && tones.filter(n => n.a !== 0).length > 1) continue;
+      break;
+    }
+    inv = lv === 1 ? 0 : lv === 2 ? r.pick([0, 0, 1]) : r.int(0, tones.length - 1);
+    voiced = voiceChord(invert(tones, inv), clef);
+    const steps = CH[q].iv.map(([iq, num]) => `${nm(root)} up to ${nm(up(root, iq, num))} is a ${ivName(iq, num)}`);
+    let ex = `Stacked in 3rds from the root it's ${tones.map(nm).join(' – ')}: ${CH[q].how}. ${cap(steps.join(', '))}. That's <b>${chordLabel(root, q)}</b>.`;
+    if (inv > 0) ex += ` The lowest note is ${nm(voiced[0])}, not the root, so it's in ${INV[inv]}.`;
+    return {
+      kind: 'chord', prompt: 'Name this chord', sub: `${cap(clef)} clef${lv > 1 ? ', may be inverted' : ''}`,
+      staff: { clef, cols: [voiced] }, choices: chordChoices(r, root, q, voiced, inv, quals),
+      answer: `${root.l},${root.a},${q}`, answerLabel: chordLabel(root, q), root, q, inv,
+      audio: { kind: 'chord', notes: voiced.map(midi) }, explain: ex,
+    };
+  }
+
+  const ROM_MAJ2 = [['I', 1, 'maj'], ['ii', 2, 'min'], ['iii', 3, 'min'], ['IV', 4, 'maj'], ['V', 5, 'maj'], ['vi', 6, 'min'], ['vii°', 7, 'dim'], ['V7', 5, 'dom7']];
+  const ROM_MAJ3 = [...ROM_MAJ2, ['Imaj7', 1, 'maj7'], ['ii7', 2, 'min7'], ['IVmaj7', 4, 'maj7'], ['vi7', 6, 'min7'], ['viiø7', 7, 'hdim7']];
+  const ROM_MIN3 = [['i', 1, 'min'], ['ii°', 2, 'dim'], ['III', 3, 'maj'], ['iv', 4, 'min'], ['V', 5, 'maj'], ['VI', 6, 'maj'], ['vii°', 7, 'dim'], ['V7', 5, 'dom7'], ['vii°7', 7, 'dim7'], ['iiø7', 2, 'hdim7'], ['iv7', 4, 'min7']];
+  const DEG_Q = { major: [null, 'P', 'M', 'M', 'P', 'P', 'M', 'M'], minor: [null, 'P', 'M', 'm', 'P', 'P', 'm', 'M'] };
+  function degreeNote(tonic, mode, deg) { return deg === 1 ? { ...tonic } : up(tonic, DEG_Q[mode][deg], deg); }
+  function genBuild(r, lv) {
+    for (let t = 0; t < 100; t++) {
+      const useRoman = lv === 3 || (lv === 2 && r.chance(0.5));
+      let root, q, prompt, ex, tones;
+      if (!useRoman) {
+        q = lv === 1 ? r.pick(['maj', 'min']) : r.pick(['maj', 'min', 'dim', 'aug', 'dom7', 'min7']);
+        root = fromDia(28 + r.int(0, 6), lv === 1 ? (r.chance(0.25) ? -1 : 0) : r.pick([0, 0, -1, 1]));
+        tones = chord(root, q);
+        const kind = CH[q].iv.length === 2 ? 'triad' : 'chord';
+        prompt = `Build ${/^[AEF]/.test(nm(root)) ? 'an' : 'a'} ${chordLabel(root, q)} ${kind}`;
+        ex = `${chordLabel(root, q)} is ${CH[q].how}: <b>${tones.map(nm).join(' – ')}</b>.`;
+      } else {
+        const mode = lv === 3 && r.chance(0.45) ? 'minor' : 'major';
+        const n = r.int(-(lv === 2 ? 4 : 6), lv === 2 ? 4 : 6);
+        const [rn, deg, qq] = r.pick(lv === 2 ? ROM_MAJ2 : mode === 'major' ? ROM_MAJ3 : ROM_MIN3);
+        q = qq;
+        const tonic = P((mode === 'major' ? MAJ_KEYS : MIN_KEYS)[n], 4);
+        root = degreeNote(tonic, mode, deg);
+        if (root.o > 4) root.o -= 1;
+        tones = chord(root, q);
+        prompt = `Build the ${rn} chord in ${keyName(n, mode)}`;
+        ex = `In ${keyName(n, mode)}, scale degree ${deg} is ${nm(root)}. Build ${/^[AEF]/.test(nm(root)) ? 'an' : 'a'} ${CH[q].n} chord on it (${CH[q].how}): <b>${tones.map(nm).join(' – ')}</b>.`;
+        if (mode === 'minor' && (deg === 5 || deg === 7)) ex += ` Minor keys borrow the raised 7th from harmonic minor for this chord, which is why ${nm(degreeNote(tonic, 'minor', 7))} appears.`;
+      }
+      if (!okAcc(tones) || (lv < 3 && tones.some(WEIRD))) continue;
+      let ms = tones.map(midi);
+      while (ms[0] < 60) ms = ms.map(m => m + 12);
+      while (ms[ms.length - 1] > 83) ms = ms.map(m => m - 12);
+      const pcs = [...new Set(tones.map(pcOf))].sort((a, b) => a - b);
+      return {
+        kind: 'build', prompt, sub: 'Tap the notes on the keyboard. Any octave, any order.',
+        staff: { clef: 'treble', cols: [voiceChord(tones, 'treble')] }, answer: pcs.join(','), answerLabel: tones.map(nm).join(' – '),
+        pcs, targetMidis: ms, audio: { kind: 'chord', notes: ms }, explain: ex, labels: lv < 3,
+      };
+    }
+  }
+
+  function genEar(r, lv) {
+    if (lv === 2) {
+      let q, num, lo, hi;
+      for (let t = 0; t < 100; t++) {
+        [q, num] = r.pick(IV_MED.filter(([a, b]) => !(a === 'd' && b === 5)));
+        lo = fromDia(r.int(28, 32), r.pick([0, 0, -1])); hi = up(lo, q, num);
+        if (okAcc([lo, hi]) && !WEIRD(lo) && !WEIRD(hi)) break;
+      }
+      const others = r.shuffle(IV_MED.filter(([a, b]) => !(a === 'd' && b === 5) && !(a === q && b === num))).slice(0, 3);
+      const key = q + num;
+      return {
+        kind: 'ear', prompt: 'Which interval do you hear?', sub: 'Played low note first, then together.', earKind: 'interval',
+        staff: { clef: 'treble', cols: [[lo], [hi]] }, choices: r.shuffle([[q, num], ...others]).map(([a, b]) => ({ id: a + b, label: cap(ivName(a, b)) })),
+        answer: key, answerLabel: cap(ivName(q, num)), semi: ivSemi(q, num),
+        audio: { kind: 'interval', notes: [midi(lo), midi(hi)] },
+        explain: `You heard ${nm(lo)} up to ${nm(hi)}, a <b>${ivName(q, num)}</b> (${ivSemi(q, num)} half steps).${SONGS[key] ? ` It's the opening leap of ${SONGS[key]}.` : ''}`,
+      };
+    }
+    const quals = lv === 1 ? TRIADS : SEVENTHS;
+    let q, root, tones;
+    for (let t = 0; t < 100; t++) {
+      q = r.pick(quals);
+      root = fromDia(r.int(28, 32), r.pick([0, 0, -1, 1]));
+      tones = chord(root, q);
+      if (okAcc(tones) && !tones.some(WEIRD)) break;
+    }
+    const opts = lv === 1 ? quals : [q, ...r.shuffle(quals.filter(x => x !== q)).slice(0, 3)];
+    return {
+      kind: 'ear', prompt: lv === 1 ? 'Which triad do you hear?' : 'Which 7th chord do you hear?', sub: 'Played as a rising arpeggio, then all together.', earKind: lv === 1 ? 'triad' : 'seventh',
+      staff: { clef: 'treble', cols: [voiceChord(tones, 'treble')] },
+      choices: r.shuffle(opts).map(x => ({ id: x, label: cap(CH[x].n) })), answer: q, answerLabel: cap(CH[q].n),
+      audio: { kind: 'chord', notes: tones.map(midi) },
+      explain: `It was ${chordLabel(root, q)} (${tones.map(nm).join(' – ')}). A ${CH[q].n} chord is ${CH[q].how}.`,
+    };
+  }
+
+  /* ---------- Grading ---------- */
+  function grade(pz, resp) {
+    if (pz.kind === 'build') {
+      const sel = [...new Set(resp.map(m => m % 12))];
+      const right = sel.filter(x => pz.pcs.includes(x)).length, extra = sel.length - right;
+      const correct = right === pz.pcs.length && extra === 0;
+      let hint = `${right} of ${pz.pcs.length} notes ${right === 1 ? 'is' : 'are'} right`;
+      hint += extra ? `, and ${extra} ${extra === 1 ? "doesn't" : "don't"} belong.` : '.';
+      return { correct, hint };
+    }
+    const correct = resp === pz.answer;
+    if (correct) return { correct, hint: '' };
+    let hint = '';
+    if (pz.kind === 'note') {
+      const [l, a] = resp.split(',').map(Number);
+      if (l === pz.target.l) hint = 'Right letter. Check the accidental.';
+      else if (Math.abs(l - pz.target.l) === 1 || Math.abs(l - pz.target.l) === 6) hint = "You're one step away.";
+      else hint = 'Find a line you know and count by step from there.';
+    } else if (pz.kind === 'key') {
+      if (pz.mode === 'minor') hint = 'Find the major key first, then go down a minor 3rd.';
+      else hint = pz.n > 0 ? 'Take the last sharp and go up a half step.' : 'The second-to-last flat names the key. One flat is F.';
+    } else if (pz.kind === 'interval') {
+      const num = parseInt(resp.slice(1), 10);
+      hint = num === pz.num ? 'Right size, wrong quality. Count the half steps.' : 'Count the letter names from the bottom note to the top, including both.';
+    } else if (pz.kind === 'chord') {
+      const [l, a] = resp.split(',').map(Number);
+      if (l === pz.root.l && a === pz.root.a) hint = `Right root. Now check the ${pz.q.endsWith('7') ? '3rd, 5th and 7th' : '3rd and 5th'} above it.`;
+      else hint = pz.inv > 0 ? "The bottom note isn't always the root. Rearrange the notes into stacked 3rds." : 'In root position the lowest note is the root.';
+    } else if (pz.kind === 'ear') {
+      if (pz.earKind === 'interval') {
+        const s = ivSemi(resp[0], parseInt(resp.slice(1), 10));
+        hint = s < pz.semi ? 'It’s wider than that.' : 'It’s narrower than that.';
+      } else if (pz.earKind === 'triad') hint = 'Major sounds bright, minor darker. Diminished is tight and tense; augmented sounds stretched and unresolved.';
+      else hint = 'Listen to the top note: a major 7th sits a half step below the octave, a minor 7th a whole step. Then listen to the triad underneath.';
+    }
+    return { correct, hint };
+  }
+
+  const TYPES = [
+    { id: 'note', label: 'Note', gen: genNote },
+    { id: 'key', label: 'Key', gen: genKey },
+    { id: 'interval', label: 'Interval', gen: genInterval },
+    { id: 'chord', label: 'Chord', gen: genChord },
+    { id: 'build', label: 'Build', gen: genBuild },
+    { id: 'ear', label: 'Ear', gen: genEar },
+  ];
+  function makeSet(seed, lv, only) {
+    return TYPES.map((t, i) => {
+      const T = only ? TYPES.find(x => x.id === only) : t;
+      const r = R(mulberry(hashStr(seed + ':' + i)));
+      return { ...T.gen(r, lv), type: T.id, typeLabel: T.label };
+    });
+  }
+
+  return { makeSet, grade, TYPES, CLEF, midi, dia, nm, hashStr, mulberry, R, between, pcOf, keyAccs };
+})();
+if (typeof module !== 'undefined') module.exports = Theory;
+</script>
+
+<script>
+if (typeof document !== 'undefined') (() => {
+  'use strict';
+  const T = Theory;
+  const $ = s => document.querySelector(s);
+  const NS = 'http://www.w3.org/2000/svg';
+
+  /* ---------- Storage ---------- */
+  const STORE_KEY = 'cadence-daily-v1';
+  const load = () => { try { const v = localStorage.getItem(STORE_KEY); return v ? JSON.parse(v) : { days: {} }; } catch { return { days: {} }; } };
+  const save = db => { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch { /* storage unavailable */ } };
+  let db = load();
+  if (!db.days) db.days = {};
+
+  /* ---------- Dates ---------- */
+  const pad = n => String(n).padStart(2, '0');
+  const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const EPOCH = new Date(2026, 10, 12);
+  const dayNumber = d => Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - EPOCH) / 86400000) + 1;
+  const LEVEL_BY_DOW = [3, 1, 1, 2, 2, 2, 3];
+  const LEVEL_NAME = ['', 'Easy', 'Medium', 'Hard'];
+  const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  /* ---------- Tiers ---------- */
+  const TIERS = [
+    { min: 12, name: 'Perfect authentic cadence', note: 'V to I, root in the soprano. Flawless.' },
+    { min: 9, name: 'Imperfect authentic cadence', note: 'Home, with a little color on top.' },
+    { min: 6, name: 'Half cadence', note: 'Paused on the dominant. Tomorrow resolves it.' },
+    { min: 3, name: 'Plagal cadence', note: 'The gentle “amen.” Getting there.' },
+    { min: 0, name: 'Deceptive cadence', note: 'Went to vi instead of I. It happens to Bach too.' },
+  ];
+  const tierOf = s => TIERS.find(t => s >= t.min);
+  const pts = st => st === 'ace' ? 2 : st === 'second' ? 1 : 0;
+
+  /* ---------- State ---------- */
+  const S = { mode: 'daily', level: 2, only: '', set: [], prog: [], idx: 0, key: '', noteAcc: 0, sel: new Set(), practiceSeed: '' };
+
+  function freshProg() { return S.set.map(() => ({ tries: [], status: 'open' })); }
+  function startDaily() {
+    const now = new Date();
+    S.mode = 'daily'; S.key = dayKey(now); S.level = LEVEL_BY_DOW[now.getDay()];
+    S.set = T.makeSet('cadence-' + S.key, S.level);
+    const saved = db.days[S.key];
+    S.prog = saved && Array.isArray(saved.prog) && saved.prog.length === 6 ? saved.prog : freshProg();
+    const firstOpen = S.prog.findIndex(p => p.status === 'open');
+    S.idx = firstOpen === -1 ? 6 : firstOpen;
+    resetInputs();
+  }
+  function startPractice(keepIdx) {
+    S.mode = 'practice'; S.practiceSeed = 'practice-' + Date.now() + '-' + Math.random();
+    S.set = T.makeSet(S.practiceSeed, S.practiceLevel || 2, S.only || undefined);
+    S.prog = freshProg(); S.idx = 0; resetInputs();
+  }
+  function resetInputs() { S.noteAcc = 0; S.sel = new Set(); }
+  function persist() {
+    if (S.mode !== 'daily') return;
+    const done = S.prog.every(p => p.status !== 'open');
+    const score = S.prog.reduce((a, p) => a + pts(p.status), 0);
+    db.days[S.key] = { prog: S.prog, done, score, level: S.level };
+    save(db);
+  }
+
+  /* ---------- Audio ---------- */
+  let ac = null, master = null;
+  function audio() {
+    if (!ac) {
+      const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      ac = new C(); const comp = ac.createDynamicsCompressor(); master = ac.createGain(); master.gain.value = 0.9;
+      master.connect(comp).connect(ac.destination);
+    }
+    if (ac.state === 'suspended') ac.resume();
+    return ac;
+  }
+  function tone(m, t0, dur, vel = 0.22) {
+    const c = ac, f = 440 * Math.pow(2, (m - 69) / 12);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vel, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(vel * 0.3, t0 + 0.35); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(9000, f * 7); lp.Q.value = 0.3;
+    [[1, 1], [2, 0.42], [3, 0.16], [4, 0.08], [5, 0.04]].forEach(([h, a]) => {
+      const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f * h; o.detune.value = (h - 1) * 1.5;
+      const og = c.createGain(); og.gain.value = a; o.connect(og).connect(lp); o.start(t0); o.stop(t0 + dur + 0.05);
+    });
+    lp.connect(g).connect(master);
+  }
+  let playTimer = null;
+  function play(spec, btn) {
+    if (!audio() || !spec) return;
+    const t = ac.currentTime + 0.05, ns = spec.notes; let end = 0;
+    if (spec.kind === 'single') { tone(ns[0], t, 1.6); end = 1.6; }
+    else if (spec.kind === 'interval') { tone(ns[0], t, 1.0); tone(ns[1], t + 0.75, 1.0); tone(ns[0], t + 1.6, 1.8, 0.17); tone(ns[1], t + 1.6, 1.8, 0.17); end = 3.4; }
+    else if (spec.kind === 'chord') { ns.forEach((m, i) => tone(m, t + i * 0.42, 1.2)); const b = t + ns.length * 0.42 + 0.15; ns.forEach(m => tone(m, b, 2.0, 0.15)); end = ns.length * 0.42 + 2.2; }
+    else if (spec.kind === 'scale') { ns.forEach((m, i) => tone(m, t + i * 0.28, 0.6, 0.18)); end = ns.length * 0.28 + 0.6; }
+    if (btn) { btn.classList.add('playing'); clearTimeout(playTimer); playTimer = setTimeout(() => btn.classList.remove('playing'), end * 1000); }
+  }
+  function pluck(m) { if (!audio()) return; tone(m, ac.currentTime + 0.01, 1.1, 0.2); }
+
+  /* ---------- Staff drawing ---------- */
+  const SP = 12, HS = SP / 2;
+  const ACC_GLYPH = { '-1': '♭', '1': '♯', '0': '♮' };
+  const ACC_DY = { '-1': 4.6, '1': 5.5, '0': 5.7 };
+  const KEY_P = { sharp: [8, 5, 9, 6, 3, 7, 4], flat: [4, 7, 3, 6, 2, 5, 1] };
+  const CLEF_SHIFT = { treble: 0, bass: -2, alto: -1 };
+  function staffSVG({ clef, key = 0, cols = [] }) {
+    const base = T.CLEF[clef].base;
+    const colPs = cols.map(c => c.map(n => T.dia(n) - base));
+    let minP = -2, maxP = 10;
+    colPs.flat().forEach(p => { minP = Math.min(minP, p - 2); maxP = Math.max(maxP, p + 2); });
+    const y = p => (maxP - p) * HS;
+    const H = (maxP - minP) * HS;
+    const nAcc = Math.abs(key);
+    const keyX = 50, noteX0 = keyX + nAcc * 11 + (cols.length ? 44 : 14);
+    const colW = 74;
+    const W = Math.max(cols.length ? 230 : 150, noteX0 + cols.length * colW + (cols.length ? 0 : 6));
+    let s = `<svg xmlns="${NS}" viewBox="0 0 ${W} ${H}" width="${W * 1.35}" height="${H * 1.35}" role="img" aria-label="Music staff">`;
+    for (let i = 0; i < 5; i++) s += `<line class="st-line" x1="2" x2="${W - 2}" y1="${y(i * 2)}" y2="${y(i * 2)}"/>`;
+    s += `<line class="st-bar" x1="2" x2="2" y1="${y(8)}" y2="${y(0)}"/><line class="st-bar" x1="${W - 2}" x2="${W - 2}" y1="${y(8)}" y2="${y(0)}"/>`;
+    const fs = SP * 4;
+    if (clef === 'treble') s += `<text class="glyph" x="4" y="${y(0)}" font-size="${fs}">𝄞</text>`;
+    else if (clef === 'bass') s += `<text class="glyph" x="4" y="${y(0)}" font-size="${fs}">𝄢</text>`;
+    else s += `<text class="glyph" x="4" y="${y(0)}" font-size="${fs}">𝄡</text>`;
+    if (key) {
+      const ps = key > 0 ? KEY_P.sharp : KEY_P.flat, a = key > 0 ? 1 : -1;
+      for (let i = 0; i < nAcc; i++) s += accGlyph(keyX + i * 11, y(ps[i] + CLEF_SHIFT[clef]), a);
+    }
+    cols.forEach((col, ci) => {
+      const cx = noteX0 + ci * colW + 18;
+      const order = col.map((n, i) => ({ n, p: colPs[ci][i] })).sort((a, b) => a.p - b.p);
+      let prevShift = false;
+      order.forEach((o, i) => { o.shift = i > 0 && o.p - order[i - 1].p === 1 && !prevShift; prevShift = o.shift; });
+      const anyShift = order.some(o => o.shift);
+      const lo = order[0].p, hi = order[order.length - 1].p;
+      const lx1 = cx - 12, lx2 = cx + 12 + (anyShift ? 15 : 0);
+      for (let p = -2; p >= lo; p -= 2) s += `<line class="st-ledger" x1="${lx1}" x2="${lx2}" y1="${y(p)}" y2="${y(p)}"/>`;
+      for (let p = 10; p <= hi; p += 2) s += `<line class="st-ledger" x1="${lx1}" x2="${lx2}" y1="${y(p)}" y2="${y(p)}"/>`;
+      // accidentals: top to bottom, pushed into columns to avoid collisions
+      const placed = [];
+      order.slice().reverse().filter(o => o.n.a !== 0).forEach(o => {
+        let c = 0; while (placed.some(q => q.c === c && Math.abs(q.p - o.p) < 6)) c++;
+        placed.push({ c, p: o.p });
+        s += accGlyph(cx - 24 - c * 12, y(o.p), o.n.a);
+      });
+      order.forEach(o => {
+        const x = cx + (o.shift ? 15 : 0);
+        s += `<g transform="translate(${x} ${y(o.p)})"><ellipse class="nh" rx="7.4" ry="5.3"/><ellipse class="nh-hole" rx="3.4" ry="2.3" transform="rotate(-38)"/></g>`;
+      });
+    });
+    return s + '</svg>';
+  }
+  function accGlyph(x, yy, a) {
+    return `<text class="glyph" x="${x}" y="${yy + ACC_DY[a]}" font-size="${SP * 3.4}">${ACC_GLYPH[a]}</text>`;
+  }
+
+  /* ---------- Small marks ---------- */
+  function markSVG(status, tries) {
+    if (status === 'open') return `<span class="rest" style="${tries ? 'color:var(--near)' : ''}">𝄻</span>`;
+    if (status === 'miss') return `<svg viewBox="-11 -8 22 16" aria-hidden="true"><path d="M-6 -5 L6 5 M6 -5 L-6 5" stroke="var(--bad)" stroke-width="2.6" stroke-linecap="round"/></svg>`;
+    const c = status === 'ace' ? 'var(--good)' : 'var(--near)';
+    return `<svg viewBox="-11 -8 22 16" aria-hidden="true"><ellipse rx="8" ry="5.6" transform="rotate(-22)" fill="${c}"/></svg>`;
+  }
+  const STATUS_WORD = { open: 'not answered', ace: 'first try', second: 'second try', miss: 'missed' };
+
+  /* ---------- Rendering ---------- */
+  function renderHeader() {
+    const now = new Date();
+    $('#tab-daily').setAttribute('aria-selected', S.mode === 'daily');
+    $('#tab-practice').setAttribute('aria-selected', S.mode === 'practice');
+    if (S.mode === 'daily') {
+      $('#subtitle').innerHTML = `No. <b>${dayNumber(now)}</b> · ${DOW[now.getDay()]}, ${MON[now.getMonth()]} ${now.getDate()} · <b>${LEVEL_NAME[S.level]}</b>`;
+    } else {
+      $('#subtitle').innerHTML = `Practice · <b>${LEVEL_NAME[S.practiceLevel || 2]}</b> · unlimited sets`;
+    }
+    const pb = $('#practice-bar');
+    pb.hidden = S.mode !== 'practice';
+    if (S.mode === 'practice') {
+      const lv = S.practiceLevel || 2;
+      pb.innerHTML = `<div class="seg" role="group" aria-label="Level">${[1, 2, 3].map(l => `<button id="lv-${l}" data-act="level" data-lv="${l}" aria-pressed="${l === lv}">${LEVEL_NAME[l]}</button>`).join('')}</div>
+        <label class="sr" for="only-sel" style="position:absolute;left:-9999px">Puzzle type</label>
+        <select id="only-sel" data-act="only">${[['', 'All six types'], ...T.TYPES.map(t => [t.id, t.label + ' only'])].map(([v, l]) => `<option value="${v}" ${S.only === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+        <button class="btn" id="new-set" data-act="new">New set</button>`;
+    }
+  }
+  function renderSystem() {
+    const bars = S.set.map((pz, i) => {
+      const pr = S.prog[i];
+      return `<button class="bar ${i === S.idx ? 'is-current' : ''}" data-act="go" data-i="${i}" aria-label="Bar ${i + 1}, ${pz.typeLabel}: ${STATUS_WORD[pr.status]}" ${i === S.idx ? 'aria-current="step"' : ''}>
+        <span class="bar-staff"><span class="bar-glyph">${markSVG(pr.status, pr.tries.length)}</span></span><span class="bar-label">${pz.typeLabel}</span></button>`;
+    }).join('');
+    const allDone = S.prog.every(p => p.status !== 'open');
+    $('#system').innerHTML = bars + `<button class="bar end ${S.idx === 6 ? 'is-current' : ''}" data-act="go" data-i="6" aria-label="Results" ${allDone ? '' : 'disabled'}><span class="bar-staff"></span><span class="bar-label">Fin</span></button>`;
+  }
+
+  // Larger music-font accidentals in running text (text nodes only, never inside SVG)
+  function decorate(html) {
+    return html.split(/(<svg[\s\S]*?<\/svg>)/).map(part => part.startsWith('<svg') ? part
+      : part.replace(/>([^<]*)</g, (m, t) => '>' + t.replace(/[♭♯♮]/g, c => `<span class="acc">${c}</span>`) + '<')).join('');
+  }
+  function render() {
+    renderHeader(); renderSystem();
+    const st = $('#stage');
+    st.innerHTML = decorate(S.idx === 6 ? resultsHTML() : puzzleHTML());
+    st.classList.toggle('done', S.idx < 6 && S.prog[S.idx].status !== 'open');
+  }
+
+  function puzzleHTML() {
+    const pz = S.set[S.idx], pr = S.prog[S.idx], done = pr.status !== 'open';
+    let h = `<div><div class="eyebrow"><span>Bar ${S.idx + 1} of 6</span><span class="chip">${pz.typeLabel}</span></div><h2>${pz.prompt}</h2>${pz.sub ? `<p class="sub">${pz.sub}</p>` : ''}</div>`;
+    if (pz.kind === 'ear') {
+      h += `<div class="ear"><button class="play-big" id="play-ear" data-act="play" aria-label="Play the sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z" fill="currentColor"/></svg></button><small>Play it as many times as you like.</small></div>`;
+      if (done) h += `<div class="staff-wrap">${staffSVG(pz.staff)}</div>`;
+    } else if (pz.kind !== 'build' || done) {
+      h += `<div class="staff-wrap">${staffSVG(pz.staff)}</div>`;
+    }
+    h += answerHTML(pz, pr, done);
+    h += feedbackHTML(pz, pr);
+    if (done) {
+      const last = S.idx === 5 || S.prog.every(p => p.status !== 'open');
+      const next = S.prog.findIndex((p, i) => i > S.idx && p.status === 'open');
+      const nextFirst = S.prog.findIndex(p => p.status === 'open');
+      const goTo = next !== -1 ? next : nextFirst !== -1 ? nextFirst : 6;
+      h += `<div class="explain"><h3>Why</h3><p>${pz.explain}</p></div>
+        <div class="btn-row">${pz.kind !== 'ear' ? `<button class="btn" id="hear" data-act="play">Hear it</button>` : ''}
+        <button class="btn primary" id="next" data-act="go" data-i="${goTo}">${goTo === 6 ? 'See results' : 'Next bar'}</button></div>`;
+    }
+    return h;
+  }
+
+  function answerHTML(pz, pr, done) {
+    if (pz.kind === 'note') {
+      const tried = new Set(pr.tries);
+      const acc = done ? pz.target.a : S.noteAcc;
+      const showAcc = S.mode === 'practice' ? (S.practiceLevel || 2) > 1 : S.level > 1;
+      return `<div class="note-pad">${showAcc || pz.target.a !== 0 ? `<div class="acc-row" role="group" aria-label="Accidental"><span class="lbl">Accidental</span>${[[-1, '♭', 'flat'], [0, '♮', 'natural'], [1, '♯', 'sharp']].map(([a, g, w]) => `<button class="acc-btn" id="acc-${w}" data-act="acc" data-a="${a}" aria-pressed="${acc === a}" aria-label="${w}" ${done ? 'disabled' : ''}>${g}</button>`).join('')}</div>` : ''}
+        <div class="letters">${'CDEFGAB'.split('').map((L, l) => {
+          const id = `${l},${acc}`, isRight = done && l === pz.target.l, isWrong = [...tried].some(t => t.split(',')[0] == l && t !== pz.answer);
+          return `<button class="choice ${isRight ? 'is-right' : ''} ${isWrong && !isRight ? 'is-wrong' : ''}" id="letter-${L}" data-act="answer" data-id="${id}" ${done ? 'disabled' : ''}>${L}${isRight ? T.nm(pz.target).slice(1) : ''}</button>`;
+        }).join('')}</div></div>`;
+    }
+    if (pz.kind === 'build') return pianoHTML(pz, pr, done);
+    const tried = new Set(pr.tries);
+    return `<div class="choices">${pz.choices.map((c, i) => {
+      const right = done && c.id === pz.answer, wrong = tried.has(c.id) && c.id !== pz.answer;
+      return `<button class="choice ${right ? 'is-right' : ''} ${wrong ? 'is-wrong' : ''}" id="choice-${i}" data-act="answer" data-id="${c.id}" ${done || wrong ? 'disabled' : ''}>${c.label}</button>`;
+    }).join('')}</div>`;
+  }
+
+  function pianoHTML(pz, pr, done) {
+    const whites = [], blacks = []; let wi = 0;
+    const W = 100 / 14, BW = W * 0.62;
+    const lastTry = pr.tries[pr.tries.length - 1] || [];
+    const sel = done ? new Set(lastTry) : S.sel;
+    const target = new Set(pz.targetMidis);
+    for (let m = 60; m < 84; m++) {
+      const pc = m % 12, black = [1, 3, 6, 8, 10].includes(pc);
+      let cls = '';
+      if (done) { if (target.has(m)) cls = 'ok'; else if (sel.has(m) && !pz.pcs.includes(pc)) cls = 'no'; }
+      else if (sel.has(m)) cls = 'on';
+      const name = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'][pc] + (Math.floor(m / 12) - 1);
+      const dot = cls ? '<span class="dot"></span>' : '';
+      if (black) blacks.push(`<button class="bk ${cls}" data-act="key" data-m="${m}" aria-label="${name}" aria-pressed="${sel.has(m)}" style="left:${wi * W - BW / 2}%;width:${BW}%" ${done ? 'disabled' : ''}>${dot}</button>`);
+      else {
+        const label = pz.labels || pc === 0 ? ['C', '', 'D', '', 'E', 'F', '', 'G', '', 'A', '', 'B'][pc] + (pc === 0 ? Math.floor(m / 12) - 1 : '') : '';
+        whites.push(`<button class="wk ${cls}" data-act="key" data-m="${m}" aria-label="${name}" aria-pressed="${sel.has(m)}" style="left:${wi * W}%;width:${W}%" ${done ? 'disabled' : ''}>${dot}${label}</button>`);
+        wi++;
+      }
+    }
+    let h = `<div class="piano" id="piano">${whites.join('')}${blacks.join('')}</div>`;
+    if (!done) h += `<div class="btn-row"><button class="btn" id="clear" data-act="clear" ${S.sel.size ? '' : 'disabled'}>Clear</button><button class="btn primary" id="check" data-act="check" ${S.sel.size ? '' : 'disabled'}>Check</button></div>`;
+    return h;
+  }
+
+  function feedbackHTML(pz, pr) {
+    if (pr.status === 'ace') return `<p class="fb good"><b>First try.</b> ${pz.answerLabel}.</p>`;
+    if (pr.status === 'second') return `<p class="fb good"><b>Got it on the second try.</b> ${pz.answerLabel}.</p>`;
+    if (pr.status === 'miss') return `<p class="fb bad">Not this time. The answer is <b>${pz.answerLabel}</b>.</p>`;
+    if (pr.tries.length) return `<p class="fb near"><b>Not quite.</b> ${T.grade(pz, pr.tries[0]).hint} One more try.</p>`;
+    return '';
+  }
+
+  function resultsHTML() {
+    const score = S.prog.reduce((a, p) => a + pts(p.status), 0), tier = tierOf(score);
+    let h = `<div><div class="eyebrow"><span>${S.mode === 'daily' ? 'Today’s result' : 'Practice result'}</span></div>
+      <div class="result-head"><div class="score">${score}<span>/12</span></div><div><div class="tier">${tier.name}</div><p class="tier-note">${tier.note}</p></div></div></div>`;
+    h += `<div class="rows">${S.set.map((pz, i) => `<button class="row" data-act="go" data-i="${i}"><span class="k">${pz.typeLabel}</span>${markSVG(S.prog[i].status, 0)}<span class="v">${pz.answerLabel}</span></button>`).join('')}</div>`;
+    if (S.mode === 'daily') {
+      const text = shareText(score);
+      h += `<div class="btn-row"><button class="btn primary" id="share" data-act="share">Copy result</button><span id="share-msg" class="sub"></span></div>
+        <textarea class="share-text" id="share-text" rows="4" readonly hidden>${text}</textarea>
+        <p class="sub" style="margin:0">Next puzzle in <span class="countdown" id="countdown">${countdown()}</span>.</p>`;
+      h += statsHTML(score);
+      h += `<div class="btn-row"><button class="btn" id="go-practice" data-act="mode" data-mode="practice">Keep practicing</button></div>`;
+    } else {
+      h += `<div class="btn-row"><button class="btn primary" id="new-set-2" data-act="new">New set</button><button class="btn" id="go-today" data-act="mode" data-mode="daily">Back to today</button></div>`;
+    }
+    return h;
+  }
+  function shareText(score) {
+    const now = new Date();
+    const sq = S.prog.map(p => p.status === 'ace' ? '🟩' : p.status === 'second' ? '🟨' : '🟥').join('');
+    return `Cadence No. ${dayNumber(now)} (${LEVEL_NAME[S.level]}) ${score}/12\n${sq}\n${tierOf(score).name}`;
+  }
+  function countdown() {
+    const now = new Date(), mid = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const s = Math.max(0, Math.floor((mid - now) / 1000));
+    return `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  }
+  function statsHTML(todayScore) {
+    const keys = Object.keys(db.days).filter(k => db.days[k].done).sort();
+    const played = keys.length;
+    const avg = played ? (keys.reduce((a, k) => a + db.days[k].score, 0) / played) : 0;
+    const set = new Set(keys);
+    const back = (d, n) => { const x = new Date(d); x.setDate(x.getDate() - n); return x; };
+    let cur = 0, d = new Date();
+    if (!set.has(dayKey(d))) d = back(d, 1);
+    while (set.has(dayKey(d))) { cur++; d = back(d, 1); }
+    let best = 0, run = 0, prev = null;
+    keys.forEach(k => {
+      const [y, m, dd] = k.split('-').map(Number), dt = new Date(y, m - 1, dd);
+      run = prev && Math.round((dt - prev) / 86400000) === 1 ? run + 1 : 1; best = Math.max(best, run); prev = dt;
+    });
+    const counts = TIERS.map(t => keys.filter(k => tierOf(db.days[k].score) === t).length);
+    const maxC = Math.max(1, ...counts), todayTier = tierOf(todayScore);
+    return `<p class="section-label">Your stats</p>
+      <div class="stats"><div class="stat"><b>${played}</b><span>Played</span></div><div class="stat"><b>${avg.toFixed(1)}</b><span>Average</span></div><div class="stat"><b>${cur}</b><span>Streak</span></div><div class="stat"><b>${best}</b><span>Best streak</span></div></div>
+      <div class="dist">${TIERS.map((t, i) => `<div class="dist-row ${t === todayTier ? 'today' : ''}"><span>${t.name}</span><span class="barfill" style="width:${Math.max(8, counts[i] / maxC * 100)}%">${counts[i]}</span></div>`).join('')}</div>`;
+  }
+
+  /* ---------- Actions ---------- */
+  function submit(resp) {
+    const pz = S.set[S.idx], pr = S.prog[S.idx];
+    if (pr.status !== 'open') return;
+    if (typeof resp === 'string' && pr.tries.includes(resp)) return;
+    const g = T.grade(pz, resp);
+    pr.tries.push(resp);
+    if (g.correct) pr.status = pr.tries.length === 1 ? 'ace' : 'second';
+    else if (pr.tries.length >= 2) pr.status = 'miss';
+    if (pz.kind === 'build' && !g.correct && pr.status === 'open') S.sel = new Set();
+    persist(); render();
+    if (pr.status !== 'open' && pz.kind === 'build') play(pz.audio);
+    const fb = document.querySelector('.fb'); if (fb && window.innerWidth < 700) fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  function go(i) {
+    if (i === 6 && !S.prog.every(p => p.status !== 'open')) return;
+    S.idx = i; resetInputs(); render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function setMode(m) {
+    if (m === S.mode) { if (m === 'daily' && S.idx === 6) return; }
+    if (m === 'daily') { startDaily(); history.replaceState(null, '', location.pathname + location.search); }
+    else { startPractice(); try { history.replaceState(null, '', '#practice'); } catch { } }
+    render();
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+    const act = b.dataset.act;
+    if (act === 'answer') submit(b.dataset.id);
+    else if (act === 'acc') { S.noteAcc = Number(b.dataset.a); render(); }
+    else if (act === 'go') go(Number(b.dataset.i));
+    else if (act === 'play') play(S.set[S.idx].audio, b.classList.contains('play-big') ? b : null);
+    else if (act === 'key') {
+      const m = Number(b.dataset.m);
+      if (S.sel.has(m)) S.sel.delete(m); else { S.sel.add(m); pluck(m); }
+      render();
+    }
+    else if (act === 'clear') { S.sel = new Set(); render(); }
+    else if (act === 'check') { if (S.sel.size) submit([...S.sel].sort((a, b) => a - b)); }
+    else if (act === 'mode') setMode(b.dataset.mode);
+    else if (act === 'level') { S.practiceLevel = Number(b.dataset.lv); startPractice(); render(); }
+    else if (act === 'new') { startPractice(); render(); }
+    else if (act === 'help') $('#help').showModal();
+    else if (act === 'help-close') $('#help').close();
+    else if (act === 'share') {
+      const text = shareText(S.prog.reduce((a, p) => a + pts(p.status), 0));
+      const msg = $('#share-msg'), ta = $('#share-text');
+      const fallback = () => { ta.hidden = false; ta.focus(); ta.select(); msg.textContent = 'Select and copy the text below.'; };
+      try {
+        navigator.clipboard.writeText(text).then(() => { msg.textContent = 'Copied. Paste it anywhere.'; }, fallback);
+      } catch { fallback(); }
+    }
+  });
+  document.addEventListener('change', e => {
+    if (e.target.id === 'only-sel') { S.only = e.target.value; startPractice(); render(); }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey || S.idx === 6) return;
+    const pz = S.set[S.idx], pr = S.prog[S.idx];
+    if (pz.kind === 'note' && pr.status === 'open') {
+      const k = e.key.toUpperCase();
+      const l = 'CDEFGAB'.indexOf(k);
+      if (l !== -1 && k.length === 1) { submit(`${l},${S.noteAcc}`); e.preventDefault(); }
+      else if (e.key === '#' || e.key === '+') { S.noteAcc = S.noteAcc === 1 ? 0 : 1; render(); }
+      else if (e.key === '-') { S.noteAcc = S.noteAcc === -1 ? 0 : -1; render(); }
+    }
+    if (e.key === 'Enter' && pr.status !== 'open' && !e.target.closest('button')) { const n = $('#next'); if (n) n.click(); }
+  });
+
+  // Day rollover and countdown
+  setInterval(() => {
+    if (S.mode === 'daily' && dayKey(new Date()) !== S.key) { startDaily(); render(); return; }
+    const c = $('#countdown'); if (c) c.textContent = countdown();
+  }, 1000);
+
+  if (location.hash === '#practice') { S.practiceLevel = 2; startPractice(); } else startDaily();
+  render();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => render());
+})();
+</script>
